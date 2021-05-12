@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string>
 #include <windows.h>
-#include <X11/Xlib.h>
 #define cols 240
 #define lines 40
 #define reps 200
