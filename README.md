@@ -16,7 +16,6 @@ Niniejszy projekt dotyczy implementacji gry FlappyBird w standardowej wersji, tj
 
 Zdajemy sobie sprawę z trudności, które mogą się pojawić, przede wszystkim z dokładnym sposobem wyświetlania tablicy na konsoli ("czyszczeniu konsoli", bądź też ciągłym wypisywaniu nowych tablic), częstotliwością, która przy zachowaniu grywalności, byłaby akceptowalna przez parametry komputera oraz dopasowaniu rozmiaru tablicy do rozmiaru konsoli. Teraz chcemy poszukać rozwiązań tych problemów, nim przystąpimy do samej implementacji.
 
-#########################
 
 # Raport z dnia 13 maja 2021 r.
 
