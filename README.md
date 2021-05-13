@@ -18,7 +18,7 @@ Zdajemy sobie sprawę z trudności, które mogą się pojawić, przede wszystkim
 
 #########################
 
-#Raport z dnia 13 maja 2021 r.
+# Raport z dnia 13 maja 2021 r.
 
 -> zastąpiliśmy w głównej pętli funkcję odpowiadającą za "czyszczeniu konsoli", która powodowała migotanie z taką, że niweluje ten problem praktycznie do zera
 
