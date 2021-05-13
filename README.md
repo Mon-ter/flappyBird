@@ -15,3 +15,13 @@ Niniejszy projekt dotyczy implementacji gry FlappyBird w standardowej wersji, tj
 -> ptak może być np. obiektem, z polami definiującymi jego współrzędne w globalnej tablicy (tak samo jak i przeszkody)
 
 Zdajemy sobie sprawę z trudności, które mogą się pojawić, przede wszystkim z dokładnym sposobem wyświetlania tablicy na konsoli ("czyszczeniu konsoli", bądź też ciągłym wypisywaniu nowych tablic), częstotliwością, która przy zachowaniu grywalności, byłaby akceptowalna przez parametry komputera oraz dopasowaniu rozmiaru tablicy do rozmiaru konsoli. Teraz chcemy poszukać rozwiązań tych problemów, nim przystąpimy do samej implementacji.
+
+#########################
+
+#Raport z dnia 13 maja 2021 r.
+
+-> zastąpiliśmy w głównej pętli funkcję odpowiadającą za "czyszczeniu konsoli", która powodowała migotanie z taką, że niweluje ten problem praktycznie do zera
+
+-> rozwiązaliśmy już większość problemów jakie na początku nam były postawione, przez co będziemy mogli przekształcać obecny algorytm do wersji ostatecznej
+
+-> problemów, bądź większych błędów, które mogłyby powstrzymać nas od dalszej realizacji projektu nie stwierdziliśmy. 
