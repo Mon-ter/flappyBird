@@ -24,3 +24,19 @@ Zdajemy sobie sprawę z trudności, które mogą się pojawić, przede wszystkim
 -> rozwiązaliśmy już większość problemów jakie na początku nam były postawione, przez co będziemy mogli przekształcać obecny algorytm do wersji ostatecznej
 
 -> problemów, bądź większych błędów, które mogłyby powstrzymać nas od dalszej realizacji projektu nie stwierdziliśmy. 
+
+# Raport z dnia 20 maja 2021 r.
+
+-> przeszkody przyjęły ostateczną formę (tj. mają przerwę), są kreowane losowo
+
+-> sterowalny obiekt (@), gra kończy się na razie wyłącznie wtedy, gdy obiekt poleci zbyt wysoko/nisko (do dopisania: przerwanie gry, gdy ptak trafi w przeszkodę, niewielka zmiana kodu)
+
+-> wprowadziliśmy menu wejściowe - wyjściowe (niektóre funkcjonalności pozostaje dopisać - zapisanie gry, lista wyników; ew. szybsze wyświetlanie menu)
+
+-> większych problemów nie było (zrezygnowaliśmy jedynie z szybszego czyszczenia ekranu, z powodu dziwnego działania, którego nie rozumiem (Tomasz Szczepanik)
+
+-> nie korzystaliśmy z żadnego tutorialu, idea & mechanika gry jest naszą autorską
+-> szukając konkretnych rzeczy, których potrzebowaliśmy do implementacji, użyliśmy przykładowych stron
+https://cpp0x.pl/
+https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+zaś istnienie takich funkcji/bibliotek sugerowali internauci na forach internetowych, na które się natknęliśmy np. wyszukując możliwości weryfikacji niekoniecznej interakcji użytkownika z klawiatury, bez konieczności użycia cin, który przerywałby wyświetlanie gry (i wymaga zawsze interakcji, a przecież gracz nie zawsze będzie naciskać spację)
