@@ -83,7 +83,7 @@ void bHC(int *birdsHeight) {
 
     short mov = GetAsyncKeyState(VK_SPACE);
     if (mov & movementControl) {
-        (*birdsHeight) -= 10;
+        (*birdsHeight) -= 6;
         if (*birdsHeight < 0) {
             *birdsHeight = 0;
         }
@@ -95,6 +95,19 @@ void bHC(int *birdsHeight) {
 
 int whereIsBird(int upperBound, int lowerBound, int hei) {
     if (hei == 0 || hei == height) {
+        return -1;
+    }
+    if (hei <= upperBound) {
+        return 1;
+    } else if (hei <= lowerBound) {
+        return 2;
+    } else {
+        return 3;
+    }
+}
+
+int whereIsBirdBonus(int upperBound, int lowerBound, int hei, int blank) {
+    if (hei == 0 || hei == height || hei <= upperBound || hei >= lowerBound) {
         return -1;
     }
     if (hei <= upperBound) {
@@ -293,10 +306,85 @@ int game() {
             system("cls");
         }
         j = xd;
-        while (j >= 0) {
-            int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
+        while (j >= length) {
             if (j % 2 == 0)
                 bHC(&birdsHeight);
+            int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
+            if (sw < 0) {
+                return counter;
+            }
+            if (sw == 2) {
+                cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
+                for (int k = 1; k < 4; k++) {
+                    cout << c[cols] << "\n";
+                }
+                int k = 0;
+                for (; k < upperBound; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+                for (; k < birdsHeight; k++) {
+                    cout << "\n";
+                }
+                cout << s[lengthMinusOne] << "@\n";
+                for (; k < lowerBound; k++) {
+                    cout << "\n";
+                }
+                for (; k < height; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+            } else if (sw == 1) {
+                cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
+                for (int k = 1; k < 4; k++) {
+                    cout << c[cols] << "\n";
+                }
+                int k = 0;
+                for (; k < birdsHeight; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+                if (j >= length) {
+                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n";
+                }
+                for (; k < upperBound; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+                for (; k < lowerBound; k++) {
+                    cout << "\n";
+                }
+                for (; k < height; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+            } else {
+                cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
+                for (int k = 1; k < 4; k++) {
+                    cout << c[cols] << "\n";
+                }
+                int k = 0;
+                for (; k < upperBound; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+                for (; k < lowerBound; k++) {
+                    cout << "\n";
+                }
+                for (; k < birdsHeight; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+                if (j >= length) {
+                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n";
+                }
+                for (; k < height; k++) {
+                    cout << s[j] << c[length] << "\n";
+                }
+            }
+            j--;
+            for (int k = 0; k < 4; k++) {
+                cout << c[cols] << "\n";
+            }
+            system("cls");
+        }
+        while (j >= 0) {
+            if (j % 2 == 0)
+                bHC(&birdsHeight);
+            int sw = whereIsBirdBonus(upperBound, lowerBound, birdsHeight, blank);
             if (sw < 0) {
                 return counter;
             }
