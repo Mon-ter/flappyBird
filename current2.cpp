@@ -1,15 +1,12 @@
 #include <iostream>
-#include <cstdlib>
-#include <cstdio>
 #include <ctime>
 #include <string>
+#include <cstdlib>
 #include <windows.h>
-#include <thread>
+#include <fstream>
 
 #define cols 96
 #define lines 40
-#define reps 200
-#define interval 100ms
 
 using namespace std;
 int height = lines - 2 * 5;
@@ -25,12 +22,11 @@ void printPauseMenu(int selected) {
 }
 
 void printMainMenu(int selected) {
-    string Menu = "FlappyBird Game\n\n    New game\n    Load game\n    Continue game\n    Leaderboard\n    Quit";
+    string Menu = "FlappyBird Game\n\n    New game\n    Load game\n    Leaderboard\n    Quit";
     if (selected == 0) Menu.replace(17, 2, "->");
     else if (selected == 1) Menu.replace(30, 2, "->");
     else if (selected == 2) Menu.replace(44, 2, "->");
-    else if (selected == 3) Menu.replace(62, 2, "->");
-    else if (selected == 4) Menu.replace(78, 2, "->");
+    else if (selected == 3) Menu.replace(60, 2, "->");
     system("CLS");
     cout << Menu;
 }
@@ -46,38 +42,197 @@ void printAfterGameMenu(int selected, int val) {
     cout << game << score << options;
 }
 
-void addToLeaderBoard(const string& name, int score) {
+void printLeaderboard() {
+    system("CLS");
+    cout << "FlappyBird Game\n\n" << "->  Return\n\n" << "Leaderboard:\n";
+    ifstream file("leaderboard.json");
+    string line;
+    if (file.is_open()) {
+        getline(file, line); //skips first bracket
+        getline(file, line);
+        int i;
+        for(i = 0; i < line.size(); i++) {
+            if(line.at(i) != ' ') continue;
+            i++;
+            break;
+        }
+        string temp = "";
+        while(line.at(i) != ',') {
+            temp += line.at(i);
+            i++;
+        }
+        int rows = stoi(temp);
 
+        getline(file, line); //skips lowest_score
+        getline(file, line);
+        for(i = 0; i < rows; i++) {
+            temp = "";
+            getline(file, line);
+            getline(file, line);
+            cout << i + 1 << ". ";
+            int j = 0;
+            while(line.at(j) != ' ')
+                j++;
+            j += 2; //skips ' ' and '"'
+            while(line.at(j) != '"') {
+                temp += line.at(j);
+                j++;
+            }
+            j = 0;
+            cout << temp << ": ";
+            getline(file, line);
+            temp = "";
+            while(line.at(j) != ' ')
+                j++;
+            j++;
+            while(j != line.size()) {
+                temp += line.at(j);
+                j++;
+            }
+            cout << temp << " points!" << "\n";
+            getline(file, line);
+        }
+
+        file.close();
+    } else {
+        cout << "Empty :(";
+    }
+    while(true) {
+        short key_enter = GetAsyncKeyState(VK_RETURN);
+        if (key_enter & (0x8000 != 0)) {
+            break;
+        }
+    }
 }
 
-void bHC(int *birdsHeight) {
+void addToLeaderBoard(const string& name, int score) {
+    ifstream read_file("leaderboard.json");
+    string row;
+    getline (read_file, row);
+    if(read_file.is_open()) {
+        getline(read_file, row); //gets number of rows
+        int i;
+        for(i = 0; i < row.size(); i++) {
+            if(row.at(i) != ' ') continue;
+            i++;
+            break;
+        }
+        string temp = "";
+        while(row.at(i) != ',') {
+            temp += row.at(i);
+            i++;
+        }
+        int rows = stoi(temp);
+        getline(read_file, row); //gets lowest score
+        for(i = 0; i < row.size(); i++) {
+            if(row.at(i) != ' ') continue;
+            i++;
+            break;
+        }
+        temp = "";
+        while(row.at(i) != ',') {
+            temp += row.at(i);
+            i++;
+        }
+        int lowest = stoi(temp);
+        if(rows == 10 && lowest >= score) { //if the score is too low: skip entry to the leaderboard
+            read_file.close();
+            return;
+        }
+        getline(read_file, row);
+        string scores[rows][2];
+        for(i = 0; i < rows; i++) {
+            temp = "";
+            getline(read_file, row);
+            getline(read_file, row);
+            int j = 0;
+            while(row.at(j) != ' ')
+                j++;
+            j += 2; //skips ' ' and '"'
+            while(row.at(j) != '"') {
+                temp += row.at(j);
+                j++;
+            }
+            j = 0;
+            scores[i][0] = temp;
+            getline(read_file, row);
+            temp = "";
+            while(row.at(j) != ' ')
+                j++;
+            j++;
+            while(j != row.size()) {
+                temp += row.at(j);
+                j++;
+            }
+            scores[i][1] = temp;
+            getline(read_file, row);
+        }
+        ofstream newfile("leaderboard.json");
+        if(rows != 10) rows += 1;
+        if(lowest > score) lowest = score;
+        newfile << "{\n\t\"rows\": " << rows << ",\n\t\"lowest_score\": "
+                  << lowest << ",\n\t\"leaderboard\": [\n";
+        int j, val;
+        string nametofile;
+        bool isEntried = false;
+        for(i = 0, j = 0; j < rows; j++) {
+            if((i == rows - 1 || stoi(scores[i][1]) <= score) && !isEntried) {
+                val = score;
+                nametofile = name;
+                isEntried = true;
+            } else {
+                val = stoi(scores[i][1]);
+                nametofile = scores[i][0];
+                i++;
+            }
+            newfile << "\t\t{\n\t\t\t\"name\": \"" << nametofile << "\",\n\t\t\t\"points\": " << val << "\n\t\t}";
+            if(j + 1 == rows) newfile << "\n";
+            else newfile << ",\n";
+        }
+        newfile << "\t]\n}";
+        newfile.close();
+    } else {
+        ofstream first_row("leaderboard.json");
+        first_row << "{\n\t\"rows\": " << 1 << ",\n\t\"lowest_score\": "
+        << score << ",\n\t\"leaderboard\": [\n\t\t{\n\t\t\t\"name\": \""
+        << name << "\",\n\t\t\t\"points\": " << score << "\n\t\t}\n\t]\n}";
+        first_row.close();
+    }
+}
+
+void bHC(int *birdsHeight ) {
     short movementControl = 1;
 
     short key_esc = GetAsyncKeyState(VK_ESCAPE);
     if (key_esc & (0x8000 != 0)) {
         int selected = 0;
         int confirmed = -1;
+        printPauseMenu(selected);
         while (confirmed == -1) {
-            printPauseMenu(selected);
             short key_up = GetAsyncKeyState(VK_UP);
             short key_down = GetAsyncKeyState(VK_DOWN);
             short key_enter = GetAsyncKeyState(VK_RETURN);
             if (key_up & (0x8000 != 0)) {
                 if (selected == 0) selected = 3;
                 selected--;
+                printPauseMenu(selected);
             } else if (key_down & (0x8000 != 0)) {
                 if (selected == 2) selected = -1;
                 selected++;
+                printPauseMenu(selected);
             } else if (key_enter & (0x8000 != 0)) {
                 confirmed = selected;
             }
         }
         if(confirmed == 0) {
-            //nothing
+            //goes back to the game
         } else if(confirmed == 1) {
-            //save game, go to main menu
+            //save game
+            (*birdsHeight) = -1;
+            return;
         } else {
-            //abort game, go to main menu
+            (*birdsHeight) = -1;
+            return;
         }
     }
 
@@ -123,6 +278,8 @@ int whereIsBirdBonus(int upperBound, int lowerBound, int hei, int blank) {
 
 int game();
 
+
+
 int main() {
     int selected;
     int confirmed;
@@ -130,17 +287,19 @@ int main() {
     selected = 0;
     confirmed = -1;
     while (true) {
+        printMainMenu(selected);
         while (confirmed == -1) {
-            printMainMenu(selected);
             short key_up = GetAsyncKeyState(VK_UP);
             short key_down = GetAsyncKeyState(VK_DOWN);
             short key_enter = GetAsyncKeyState(VK_RETURN);
             if (key_up & (0x8000 != 0)) {
-                if (selected == 0) selected = 5;
+                if (selected == 0) selected = 4;
                 selected--;
+                printMainMenu(selected);
             } else if (key_down & (0x8000 != 0)) {
-                if (selected == 4) selected = -1;
+                if (selected == 3) selected = -1;
                 selected++;
+                printMainMenu(selected);
             } else if (key_enter & (0x8000 != 0)) {
                 confirmed = selected;
             }
@@ -156,17 +315,19 @@ int main() {
 
             selected = 0;
             confirmed = -1;
+            printAfterGameMenu(selected, score);
             while (confirmed == -1) {
-                printAfterGameMenu(selected, score);
                 short key_up = GetAsyncKeyState(VK_UP);
                 short key_down = GetAsyncKeyState(VK_DOWN);
                 short key_enter = GetAsyncKeyState(VK_RETURN);
                 if (key_up & (0x8000 != 0)) {
                     if (selected == 0) selected = 3;
                     selected--;
+                    printAfterGameMenu(selected, score);
                 } else if (key_down & (0x8000 != 0)) {
                     if (selected == 2) selected = -1;
                     selected++;
+                    printAfterGameMenu(selected, score);
                 } else if (key_enter & (0x8000 != 0)) {
                     confirmed = selected;
                 }
@@ -177,6 +338,7 @@ int main() {
                 cout << "FlappyBird Game\n\nWpisz swoje imie: ";
                 cin >> name;
                 addToLeaderBoard(name, score);
+                short key_enter = GetAsyncKeyState(VK_RETURN);
             } else if (confirmed == 1) {
                 confirmed = 0;
                 continue;
@@ -184,10 +346,13 @@ int main() {
                 //nothing
             }
         }
-        else if (confirmed == 1) {}
-        else if (confirmed == 2) {}
-        else if (confirmed == 3) {}
-        else break; //confirmed == 4
+        else if (confirmed == 1) { //Main menu -> load game
+
+        }
+        else if (confirmed == 2) { //Main menu -> leaderboard
+            printLeaderboard();
+        }
+        else break; //exit
 
 
 
@@ -235,6 +400,9 @@ int game() {
                 bHC(&birdsHeight);
             if (sw < 0) {
                 return counter;
+            }
+            if(birdsHeight == -1) {
+                return -1;
             }
             cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
             if (sw == 2) {
@@ -313,6 +481,9 @@ int game() {
             if (sw < 0) {
                 return counter;
             }
+            if(birdsHeight == -1) {
+                return -1;
+            }
             if (sw == 2) {
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
@@ -388,6 +559,9 @@ int game() {
             if (sw < 0) {
                 return counter;
             }
+            if(birdsHeight == -1) {
+                return -1;
+            }
             if (sw == 2) {
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
@@ -462,6 +636,9 @@ int game() {
             bHC(&birdsHeight);
             for (int k = 1; k < 5; k++) {
                 cout << c[cols] << "\n";
+            }
+            if(birdsHeight == -1) {
+                return -1;
             }
             int k = 0;
             for (; k < upperBound; k++) {
