@@ -10,7 +10,12 @@
 
 using namespace std;
 int height = lines - 2 * 5;
-
+int mode = 0;
+int aoo;
+int boo;
+int coo;
+int doo;
+int eoo;
 void printPauseMenu(int selected) {
     string game = "FlappyBird Game\n\n";
     string options = "    Continue game\n    Save game\n    Main menu";
@@ -200,7 +205,7 @@ void addToLeaderBoard(const string& name, int score) {
     }
 }
 
-void bHC(int *birdsHeight ) {
+void bHC(int *birdsHeight, int upperBound, int phase, int index) {
     short movementControl = 1;
 
     short key_esc = GetAsyncKeyState(VK_ESCAPE);
@@ -228,6 +233,7 @@ void bHC(int *birdsHeight ) {
             //goes back to the game
         } else if(confirmed == 1) {
             //save game
+            // trzeba zapisac *birdsHeight (to, na co wskazuje birdsHeight), upperBound, phase, index, score
             (*birdsHeight) = -1;
             return;
         } else {
@@ -347,7 +353,13 @@ int main() {
             }
         }
         else if (confirmed == 1) { //Main menu -> load game
-
+			mode = 1; // potrzeba wczytac do zmiennych: aoo, boo, coo, doo, eoo kolejne rzeczy z pliku
+			aoo = 20; // pierwszy parametr z pliku - wysokosc ptaka
+			boo = 20; // drugi parametr z pliku - upperBound
+			coo = 1; // numer fazy
+			doo = 0; // index
+			eoo = 300;
+			game();
         }
         else if (confirmed == 2) { //Main menu -> leaderboard
             printLeaderboard();
@@ -391,13 +403,24 @@ int game() {
     int carry = cols - 10;
     int birdsHeight = height / 2;
     while (1) {
-        int j = 0;
-        upperBound = rand() % boundOfLowerBounds;
+    	int j;
+    	if (mode == 0) {
+        	j = 0;
+        	upperBound = rand() % boundOfLowerBounds;
+    	} else {
+    		if (coo == 1) 
+    			j = doo;
+    		else
+    			j = length;
+    		birdsHeight = aoo;
+    		upperBound = boo;
+    		counter = eoo;
+		}
         lowerBound = upperBound + blank;
         while (j < length) {
             int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
             if (j % 2 == 0)
-                bHC(&birdsHeight);
+                bHC(&birdsHeight, upperBound, 1, j);
             if (sw < 0) {
                 return counter;
             }
@@ -473,10 +496,18 @@ int game() {
             j++;
             system("cls");
         }
-        j = xd;
+        if (mode == 0)
+        	j = xd;
+        else {
+        	if (coo == 3)
+        		j = length - 1;
+        	else
+        		j = xd;
+		}
+        	
         while (j >= length) {
             if (j % 2 == 0)
-                bHC(&birdsHeight);
+                bHC(&birdsHeight, upperBound, 2, j);
             int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
             if (sw < 0) {
                 return counter;
@@ -552,9 +583,10 @@ int game() {
             }
             system("cls");
         }
+        
         while (j >= 0) {
             if (j % 2 == 0)
-                bHC(&birdsHeight);
+                bHC(&birdsHeight, upperBound, 2, j);
             int sw = whereIsBirdBonus(upperBound, lowerBound, birdsHeight, blank);
             if (sw < 0) {
                 return counter;
@@ -630,10 +662,19 @@ int game() {
             }
             system("cls");
         }
-        j = length - 1;
+        if (mode != 0) {
+        	if (coo == 3) {
+        		j = doo;
+			} else {
+				j = length - 1;
+			}
+		} else {
+			j = length - 1;
+		}
+        
         while (j >= 0) {
             cout << d << counter << " || press \"ESC\" to pause the game.\n";
-            bHC(&birdsHeight);
+            bHC(&birdsHeight, upperBound, 3, j);
             for (int k = 1; k < 5; k++) {
                 cout << c[cols] << "\n";
             }
@@ -657,6 +698,7 @@ int game() {
             system("cls");
         }
         counter++;
+        mode = 0;
         if (counter == currentBound) {
             lengthOfScore--;
             currentBound *= 10;
