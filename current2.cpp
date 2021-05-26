@@ -244,7 +244,7 @@ void saveGame() {
     newfile.close();
 }
 
-void bHC(int *birdsHeight, int upperBound, int phase, int index) {
+void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
     short movementControl = 1;
 
     short key_esc = GetAsyncKeyState(VK_ESCAPE);
@@ -271,6 +271,11 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index) {
         if (confirmed == 0) {
             //goes back to the game
         } else if (confirmed == 1) {
+        	aoo = *birdsHeight;
+        	boo = upperBound;
+        	coo = phase;
+        	doo = index;
+        	eoo = counter;
             saveGame();
             (*birdsHeight) = -1;
             return;
@@ -452,7 +457,7 @@ int game() {
         while (j < length) {
             int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
             if (j % 2 == 0)
-                bHC(&birdsHeight, upperBound, 1, j);
+                bHC(&birdsHeight, upperBound, 1, j, counter);
             if (sw < 0) {
                 return counter;
             }
@@ -539,7 +544,7 @@ int game() {
 
         while (j >= length) {
             if (j % 2 == 0)
-                bHC(&birdsHeight, upperBound, 2, j);
+                bHC(&birdsHeight, upperBound, 2, j, counter);
             int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
             if (sw < 0) {
                 return counter;
@@ -618,7 +623,7 @@ int game() {
 
         while (j >= 0) {
             if (j % 2 == 0)
-                bHC(&birdsHeight, upperBound, 2, j);
+                bHC(&birdsHeight, upperBound, 2, j, counter);
             int sw = whereIsBirdBonus(upperBound, lowerBound, birdsHeight, blank);
             if (sw < 0) {
                 return counter;
@@ -706,7 +711,7 @@ int game() {
 
         while (j >= 0) {
             cout << d << counter << " || press \"ESC\" to pause the game.\n";
-            bHC(&birdsHeight, upperBound, 3, j);
+            bHC(&birdsHeight, upperBound, 3, j, counter);
             for (int k = 1; k < 5; k++) {
                 cout << c[cols] << "\n";
             }
