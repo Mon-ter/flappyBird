@@ -4,20 +4,20 @@
 #include <cstdlib>
 #include <windows.h>
 #include <fstream>
-
-#define cols 96
+// parameters defining resolution of game's console
+#define cols 96 
 #define lines 40
 
 using namespace std;
-int height = lines - 2 * 5;
-int mode = 0;
-int accCounter = 0;
-int aoo;
-int boo;
+int height = lines - 2 * 5; // height of game's board (without surrounding lines)
+int mode = 0; // variable determines whether we are in first cycle after resuming game or not
+int accCounter = 0; // variable to calculate acceleration
+int aoo; // variables used for game saving
+int boo; 
 int coo;
 int doo;
 int eoo;
-int G = 0;
+int G = 0; // gravity (=0 - normal one)
 
 void printPauseMenu(int selected) {
     string game = "FlappyBird Game\n\n";
@@ -246,8 +246,11 @@ void saveGame() {
     newfile.close();
 }
 
-void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
-    short movementControl = 1;
+void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) { // bird's Height Correction
+    // upperBound - of a current obstacle
+    // counter - score
+    // index - of the mode
+	short movementControl = 1; // helpful by logical operations on GetAsyncKeyState - like functions 
 
     short key_esc = GetAsyncKeyState(VK_ESCAPE);
     if (key_esc & (0x8000 != 0)) {
@@ -273,7 +276,7 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
         if (confirmed == 0) {
             //goes back to the game
         } else if (confirmed == 1) {
-        	aoo = *birdsHeight;
+        	aoo = *birdsHeight; // saving game
         	boo = upperBound;
         	coo = phase;
         	doo = index;
@@ -287,20 +290,20 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
             return;
         }
     }
-	short gravity = GetAsyncKeyState(0x47);
+	short gravity = GetAsyncKeyState(0x47); // possible gravity flip
     if (gravity & movementControl) {
     	G = (G == 0) ? 1 : 0;
 	}
-    short mov = GetAsyncKeyState(VK_SPACE);
-    if (G == 0) {
+    short mov = GetAsyncKeyState(VK_SPACE); // possible jump
+    if (G == 0) { // change depends on current gravity mode
 	    if (mov & movementControl) {
-	    	accCounter = 0;
-	        (*birdsHeight) -= 6;
-	        if (*birdsHeight < 0) {
+	    	accCounter = 0; // acceleration counter reset to zero
+	        (*birdsHeight) -= 6; // sole jump
+	        if (*birdsHeight < 0) { // bird is out of bound
 	            *birdsHeight = 0;
 	        }
 	    } else {
-	    	accCounter++;
+	    	accCounter++; // if accCounter exceedes 15, than speed, by which bird's falling, increases
 	    	if (accCounter > 15) {
 	    		(*birdsHeight) += 2;
 			} else {
@@ -310,7 +313,7 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
 	        	*birdsHeight = height;
 			}
 	    }
-	} else {
+	} else { // fully analogical to the if statement
 		if (mov & movementControl) {
 	    	accCounter = 0;
 	        (*birdsHeight) += 6;
@@ -329,29 +332,29 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
 			}
 	    }
 	}
-    short hack = GetAsyncKeyState(0x48);
+    short hack = GetAsyncKeyState(0x48); // random position set
     if (hack & movementControl) {
     	*birdsHeight = rand() % height;
     	accCounter = 0;
 	}
 }
 
-int whereIsBird(int upperBound, int lowerBound, int hei) {
+int whereIsBird(int upperBound, int lowerBound, int hei) { // function checks, whether bird has exceeded bounds, used when not in the range of an obstacle
     if (hei == 0 || hei == height) {
-        return -1;
+        return -1; // bird's exceeded limits
     }
-    if (hei <= upperBound) {
+    if (hei <= upperBound) { // bird is level with upper obstacle horizontally
         return 1;
-    } else if (hei <= lowerBound) {
+    } else if (hei <= lowerBound) { // bird is level with lower obstacle horizontally
         return 2;
     } else {
-        return 3;
+        return 3; // bird fits in the blank
     }
 }
 
-int whereIsBirdBonus(int upperBound, int lowerBound, int hei, int blank) {
+int whereIsBirdBonus(int upperBound, int lowerBound, int hei, int blank) { // like previous one, here one bonus condition to check, whether bird's fitting into the blank space
     if (hei == 0 || hei == height || hei <= upperBound || hei >= lowerBound) {
-        return -1;
+        return -1; // bird's exceeded limits (or hit the obstacle)
     }
     if (hei <= upperBound) {
         return 1;
@@ -363,7 +366,7 @@ int whereIsBirdBonus(int upperBound, int lowerBound, int hei, int blank) {
 }
 
 
-int game();
+int game(); // declaration of the game function
 
 
 int main() {
@@ -455,37 +458,53 @@ int main() {
 }
 
 int game() {
-    string s[cols];
+    string s[cols]; // array of spaces of each length, up to width of the screen
     s[0] = "";
     for (int i = 1; i < cols; i++) {
         s[i] = s[i - 1] + " ";
     }
-    string c[cols + 1];
+    string c[cols + 1]; // like previous, but with hyphenes
     c[0] = "";
     for (int i = 1; i <= cols; i++) {
         c[i] = c[i - 1] + "-";
     }
-    int counter = 0;
-    int length = 4;
+    /* whole idea of printing the game is displaying lines (one after another) - then clearing the screen
+    	there are five types of lines:
+    	-> upper line with some informational stuff
+    	-> lines consisting solely of "-" signs
+    	-> lines in which the bird currently residents
+    	-> lines between obstacles
+    	-> lines level with obstacles
+    	naturally, some lines belong to several types at time, for example 3. and 5. (or 3. and 4.)
+    	displaying line of the first kind - each time same text - no problem
+    	same with "-" signs
+    	displaying lines level with obstacles:
+    	(empty space - not each time occurs) (possibly a bird - if so, another empty space afterwards) (obstacle) (empty space up to the screen's boundary)
+		displaying lines level with the obstacle's blank
+		same as level with obstacles, but without obstacles 
+    */
+    int counter = 0; // score
+    int length = 4; // of an obstacle
     int lengthMinusOne = length - 1;
     int blank = 10; // blank space betweeen obstacles
-    int boundOfLowerBounds = height - blank;
-    int xd = cols - length;
+    int boundOfLowerBounds = height - blank; // lowest possible blank index
+    int xd = cols - length; // limit used while displaying
     string d = "Score: ";
-    system("mode con:cols=96 lines=40");
+    system("mode con:cols=96 lines=40"); // resize
     srand(time(NULL));
     int upperBound; // upper limit of blank space
     int lowerBound; // lower limit of blank space
-    int lengthOfScore = 2;
+    int lengthOfScore = 2; // maximum space score is allowed to take
     int currentBound = 10;
     int carry = cols - 10;
-    int birdsHeight = height / 2;
+    int birdsHeight = height / 2; // initial bird's coordinate
+    // a game is being repeated after fully executing each of three stages, after which a new obstacle occurs
     while (1) {
         int j;
-        if (mode == 0) {
+        if (mode == 0) { // game is not just reloaded
             j = 0;
-            upperBound = rand() % boundOfLowerBounds;
-        } else {
+            upperBound = rand() % boundOfLowerBounds; // creating an obstacle
+        } else { // is realoaded indeed, so we would just copy values from before the "save" usage
             if (coo == 1)
                 j = doo;
             else
@@ -494,41 +513,43 @@ int game() {
             upperBound = boo;
             counter = eoo;
         }
-        lowerBound = upperBound + blank;
-        while (j < length) {
-            int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
+        lowerBound = upperBound + blank; 
+        while (j < length) { // first part of each cycle, obstacle comes from behind the right boundary of the screen
+            int sw = whereIsBird(upperBound, lowerBound, birdsHeight); 
             if (j % 2 == 0)
-                bHC(&birdsHeight, upperBound, 1, j, counter);
+                bHC(&birdsHeight, upperBound, 1, j, counter); // described earlier
             if (sw < 0) {
-                return counter;
+                return counter; // game ends
             }
             if (birdsHeight == -1) {
             	G = 0;
                 return -1;
             }
-            cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
-            if (sw == 2) {
-                for (int k = 1; k < 4; k++) {
+            // here begins game displaying
+            // for detailed information see line 471
+            cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n"; // first line
+            if (sw == 2) { // if the bird is between obstacle blocks (horizontally) 
+                for (int k = 1; k < 4; k++) { // some four lines consisting of hyphenes
                     cout << c[cols] << "\n";
                 }
                 int k = 0;
-                for (; k < upperBound; k++) {
+                for (; k < upperBound; k++) { // displaying lines up to upperBound
                     cout << s[cols - j] << c[j] << "\n";
                 }
-                for (; k < birdsHeight; k++) {
+                for (; k < birdsHeight; k++) { // empty lines...
                     cout << "\n";
                 }
-                cout << s[lengthMinusOne] << "@\n";
+                cout << s[lengthMinusOne] << "@\n"; // up to the bird
                 for (; k < lowerBound; k++) {
                     cout << "\n";
                 }
-                for (; k < height; k++) {
+                for (; k < height; k++) { // like earlier
                     cout << s[cols - j] << c[j] << "\n";
                 }
-                for (k = 0; k < 4; k++) {
+                for (k = 0; k < 4; k++) { // ending lines
                     cout << c[cols] << "\n";
                 }
-            } else if (sw == 1) {
+            } else if (sw == 1) { // like earlier, here the bird is level with upper obstacle (horizontally)...
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
@@ -536,8 +557,8 @@ int game() {
                 for (; k < birdsHeight; k++) {
                     cout << s[cols - j] << c[j] << "\n";
                 }
-                cout << s[lengthMinusOne] << "@" << s[xd - j] << c[j] << "\n";
-                for (; k < upperBound; k++) {
+                cout << s[lengthMinusOne] << "@" << s[xd - j] << c[j] << "\n"; // ... so it will be displayed along with it
+                for (; k < upperBound; k++) { // the rest without any changes
                     cout << s[cols - j] << c[j] << "\n";
                 }
                 for (; k < lowerBound; k++) {
@@ -549,7 +570,8 @@ int game() {
                 for (int k = 0; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
-            } else {
+            } else { // like earlier, but the bird is level with lower obstacle (horizontally)
+            // for detailed information see line 471
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
@@ -564,7 +586,7 @@ int game() {
                 for (; k < birdsHeight; k++) {
                     cout << s[cols - j] << c[j] << "\n";
                 }
-                cout << s[lengthMinusOne] << "@\n" << s[xd - j] << c[j];
+                cout << s[lengthMinusOne] << "@\n" << s[xd - j] << c[j]; // here it comes
                 for (; k < height; k++) {
                     cout << s[cols - j] << c[j] << "\n";
                 }
@@ -575,7 +597,7 @@ int game() {
             j++;
             system("cls");
         }
-        if (mode == 0)
+        if (mode == 0) // are we in the first cycle after resuming game?
             j = xd;
         else {
             if (coo == 3)
@@ -584,7 +606,9 @@ int game() {
                 j = xd;
         }
 
-        while (j >= length) {
+        while (j >= length) { // second part of each cycle, here an obstacle is already fully visible
+        // but the bird is not already able to hit it
+        // only difference (comparing to previos loop) occours by displaying full, not partitioned obstacle...
             if (j % 2 == 0)
                 bHC(&birdsHeight, upperBound, 2, j, counter);
             int sw = whereIsBird(upperBound, lowerBound, birdsHeight);
@@ -595,14 +619,15 @@ int game() {
             	G = 0;
                 return -1;
             }
-            if (sw == 2) {
+            if (sw == 2) { // between the obstacles
+            	// for detailed information see line 471
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
                 int k = 0;
                 for (; k < upperBound; k++) {
-                    cout << s[j] << c[length] << "\n";
+                    cout << s[j] << c[length] << "\n"; // ... here
                 }
                 for (; k < birdsHeight; k++) {
                     cout << "\n";
@@ -612,19 +637,21 @@ int game() {
                     cout << "\n";
                 }
                 for (; k < height; k++) {
-                    cout << s[j] << c[length] << "\n";
+                    cout << s[j] << c[length] << "\n"; // ... and here
                 }
-            } else if (sw == 1) {
+            } else if (sw == 1) { // like earlier
+            // for detailed information see line 471
+            // this time - bird's level with the upper one
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
                 int k = 0;
                 for (; k < birdsHeight; k++) {
-                    cout << s[j] << c[length] << "\n";
+                    cout << s[j] << c[length] << "\n"; // once again - full obstacle's width (length) displayed
                 }
                 if (j >= length) {
-                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n";
+                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n"; // and here becomes displayed
                 }
                 for (; k < upperBound; k++) {
                     cout << s[j] << c[length] << "\n";
@@ -635,7 +662,8 @@ int game() {
                 for (; k < height; k++) {
                     cout << s[j] << c[length] << "\n";
                 }
-            } else {
+            } else { // exactly like earlier, though ->
+            // for detailed information see line 471
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
@@ -647,11 +675,11 @@ int game() {
                 for (; k < lowerBound; k++) {
                     cout << "\n";
                 }
-                for (; k < birdsHeight; k++) {
+                for (; k < birdsHeight; k++) { // this time bird's level with the lower one
                     cout << s[j] << c[length] << "\n";
                 }
                 if (j >= length) {
-                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n";
+                    cout << s[lengthMinusOne] << "@" << s[j - length] << c[length] << "\n"; // here comes the bird
                 }
                 for (; k < height; k++) {
                     cout << s[j] << c[length] << "\n";
@@ -664,18 +692,20 @@ int game() {
             system("cls");
         }
 
-        while (j >= 0) {
+        while (j >= 0) { // first part of the last part of the cycle
+        // main difference occurs
             if (j % 2 == 0)
                 bHC(&birdsHeight, upperBound, 2, j, counter);
-            int sw = whereIsBirdBonus(upperBound, lowerBound, birdsHeight, blank);
-            if (sw < 0) {
+            int sw = whereIsBirdBonus(upperBound, lowerBound, birdsHeight, blank); // <- here, as now we must check, whether bird's not fitted into the blank space
+            if (sw < 0) { // actually it didn't
                 return counter;
             }
             if (birdsHeight == -1) {
             	G = 0;
                 return -1;
             }
-            if (sw == 2) {
+            if (sw == 2) { // explanation like in the previous occurences
+            // for detailed information see line 471
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
@@ -695,6 +725,7 @@ int game() {
                     cout << s[j] << c[length] << "\n";
                 }
             } else if (sw == 1) {
+            	// for detailed information see line 471
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
@@ -716,13 +747,14 @@ int game() {
                     cout << s[j] << c[length] << "\n";
                 }
             } else {
+            	// for detailed information see line 471
                 cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
                 for (int k = 1; k < 4; k++) {
                     cout << c[cols] << "\n";
                 }
                 int k = 0;
                 for (; k < upperBound; k++) {
-                    cout << s[j] << c[length] << "\n";
+                    cout << s[j] << c[length] << "\n"; // once again - full obstacle display
                 }
                 for (; k < lowerBound; k++) {
                     cout << "\n";
@@ -753,7 +785,9 @@ int game() {
             j = length - 1;
         }
 
-        while (j >= 0) {
+        while (j >= 0) { // second part of the last part, obstacle comes before the bird
+        // finally it is safe from being hitted
+        // for detailed information see line 471
             cout << d << counter << " || press \"ESC\" to pause the game.\n";
             bHC(&birdsHeight, upperBound, 3, j, counter);
             for (int k = 1; k < 5; k++) {
@@ -780,7 +814,7 @@ int game() {
             system("cls");
         }
         counter++;
-        mode = 0;
+        mode = 0; // even if we have just resumed the game, it does not matter anymore
         if (counter == currentBound) {
             lengthOfScore--;
             currentBound *= 10;
