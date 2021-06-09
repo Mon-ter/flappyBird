@@ -17,6 +17,7 @@ int boo;
 int coo;
 int doo;
 int eoo;
+int G = 0;
 
 void printPauseMenu(int selected) {
     string game = "FlappyBird Game\n\n";
@@ -282,31 +283,56 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
             return;
         } else {
             (*birdsHeight) = -1;
+            G = 0;
             return;
         }
     }
-
+	short gravity = GetAsyncKeyState(0x47);
+    if (gravity & movementControl) {
+    	G = (G == 0) ? 1 : 0;
+	}
     short mov = GetAsyncKeyState(VK_SPACE);
-    if (mov & movementControl) {
-    	accCounter = 0;
-        (*birdsHeight) -= 6;
-        if (*birdsHeight < 0) {
-            *birdsHeight = 0;
-        }
-    } else {
-    	accCounter++;
-    	if (accCounter > 15) {
-    		(*birdsHeight) += 2;
-		} else {
-			(*birdsHeight)++;
-		}
-        if (*birdsHeight > height) {
-        	*birdsHeight = height;
-		}
-    }
+    if (G == 0) {
+	    if (mov & movementControl) {
+	    	accCounter = 0;
+	        (*birdsHeight) -= 6;
+	        if (*birdsHeight < 0) {
+	            *birdsHeight = 0;
+	        }
+	    } else {
+	    	accCounter++;
+	    	if (accCounter > 15) {
+	    		(*birdsHeight) += 2;
+			} else {
+				(*birdsHeight)++;
+			}
+	        if (*birdsHeight > height) {
+	        	*birdsHeight = height;
+			}
+	    }
+	} else {
+		if (mov & movementControl) {
+	    	accCounter = 0;
+	        (*birdsHeight) += 6;
+	        if (*birdsHeight > height) {
+	            *birdsHeight = height;
+	        }
+	    } else {
+	    	accCounter++;
+	    	if (accCounter > 15) {
+	    		(*birdsHeight) -= 2;
+			} else {
+				(*birdsHeight)--;
+			}
+	        if (*birdsHeight < 0) {
+	        	*birdsHeight = 0;
+			}
+	    }
+	}
     short hack = GetAsyncKeyState(0x48);
     if (hack & movementControl) {
     	*birdsHeight = rand() % height;
+    	accCounter = 0;
 	}
 }
 
@@ -365,6 +391,7 @@ int main() {
             }
         }
         if (confirmed == 0) {
+        	G = 0;
             int score = game();
             mode = 0;
             if (score == -1) { //player discontinued prev game
@@ -406,6 +433,7 @@ int main() {
                 //nothing
             }
         } else if (confirmed == 1) { //Main menu -> load game
+        	G = 0; 
             if (loadGame()) {
                 mode = 1;
                 confirmed = 0;
@@ -475,6 +503,7 @@ int game() {
                 return counter;
             }
             if (birdsHeight == -1) {
+            	G = 0;
                 return -1;
             }
             cout << d << counter << " " << "|| press \"ESC\" to pause the game." << "\n";
@@ -563,6 +592,7 @@ int game() {
                 return counter;
             }
             if (birdsHeight == -1) {
+            	G = 0;
                 return -1;
             }
             if (sw == 2) {
@@ -642,6 +672,7 @@ int game() {
                 return counter;
             }
             if (birdsHeight == -1) {
+            	G = 0;
                 return -1;
             }
             if (sw == 2) {
@@ -729,6 +760,7 @@ int game() {
                 cout << c[cols] << "\n";
             }
             if (birdsHeight == -1) {
+            	G = 0;
                 return -1;
             }
             int k = 0;
