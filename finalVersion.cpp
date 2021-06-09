@@ -304,6 +304,10 @@ void bHC(int *birdsHeight, int upperBound, int phase, int index, int counter) {
         	*birdsHeight = height;
 		}
     }
+    short hack = GetAsyncKeyState(0x48);
+    if (hack & movementControl) {
+    	*birdsHeight = rand() % height;
+	}
 }
 
 int whereIsBird(int upperBound, int lowerBound, int hei) {
